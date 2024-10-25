@@ -17,6 +17,7 @@ export default function App() {
   const [selectedOption, setSelectedOption] = useState<string>(""); // Selected option
   const [message, setMessage] = useState<string>("");
   const [isOptionSelected, setIsOptionSelected] = useState<boolean>(false); // Tracks if the option is selected
+  const [messageType, setMessageType] = useState<"success" | "error" | "">("");
 
   const handleScan = async (detectedCodes: { rawValue: string }[]) => {
     if (detectedCodes && detectedCodes[0]) {
@@ -35,6 +36,7 @@ export default function App() {
 
         if (docSnap.exists()) {
           setMessage(`User already received ${selectedOption}`);
+          setMessageType("error");
         } else {
           // If not scanned, store the scan record in Firestore
           await setDoc(docRef, {
@@ -43,19 +45,23 @@ export default function App() {
             timestamp: new Date(),
           });
           setMessage(`Selected: ${selectedOption} for QR code ${qrCode}`);
+          setMessageType("success");
         }
       } else {
         setMessage("QR code is invalid.");
+        setMessageType("error");
       }
     } else {
       setMessage("No QR code detected.");
+      setMessageType("error");
     }
   };
 
   const handleSelection = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectedOption(e.target.value);
     setIsOptionSelected(true); // Lock the option after selection
-    setMessage(""); // Reset the message when a new option is selected
+    setMessage(`Selected option: ${e.target.value}`);
+    setMessageType("success");
   };
 
   useEffect(() => {
@@ -100,13 +106,26 @@ export default function App() {
               onError={(error) => {
                 console.error(error);
                 setMessage("Error scanning QR code. Please try again.");
+                setMessageType("error");
               }}
               // className="w-full"
             />
           </div>
         )}
 
-        {message && <p className="mt-4 text-[#e5bafc]">{message}</p>}
+        {message && (
+          <p
+            className={`mt-4 ${
+              messageType === "success"
+                ? "text-green-400  p-2 rounded"
+                : messageType === "error"
+                ? "text-red-500 font-bold"
+                : "text-[#e5bafc]"
+            }`}
+          >
+            {message}
+          </p>
+        )}
       </div>
     </div>
   );
