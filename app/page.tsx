@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Scanner } from "@yudiel/react-qr-scanner";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import { db } from "../firebase"; // Import Firestore database
@@ -58,15 +58,26 @@ export default function App() {
     setMessage(""); // Reset the message when a new option is selected
   };
 
+  useEffect(() => {
+    // This effect runs when the component mounts
+    console.log("Component mounted");
+    return () => {
+      // This cleanup function runs when the component unmounts
+      console.log("Component unmounted");
+    };
+  }, []);
+
   // Only render the Scanner if we are in the browser and an option is selected
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
-      <h1 className="text-4xl font-bold mb-8">QR Code Scanner</h1>
-      <div className="w-full max-w-md p-4 bg-white rounded shadow-lg">
-        <h2 className="text-xl mb-4">Select an Option</h2>
+    <div className="flex flex-col items-center justify-center min-h-screen bg-[#18204E]">
+      <h1 className="text-4xl font-bold mb-8 text-[#d1a7f5]">
+        QR Code Scanner
+      </h1>
+      <div className="w-full max-w-md p-4 rounded shadow-lg bg-[#8a63d2]">
+        <h2 className="text-xl mb-4 text-[#e5bafc]">Select an Option</h2>
         {!isOptionSelected && (
           <select
-            className="p-2 border border-gray-300 rounded w-full"
+            className="p-2 border border-gray-300 rounded w-full bg-[#d1a7f5] text-[#18204E]"
             value={selectedOption}
             onChange={handleSelection}
           >
@@ -81,18 +92,21 @@ export default function App() {
 
         {isOptionSelected && (
           <div className="mt-4">
-            <h3 className="text-xl mb-2">
+            <h3 className="text-xl mb-2 text-[#e5bafc]">
               Now scan the QR code for {selectedOption}
             </h3>
             <Scanner
               onScan={handleScan}
-              onError={(error) => console.error(error)}
-              // style={{ width: "100%" }}
+              onError={(error) => {
+                console.error(error);
+                setMessage("Error scanning QR code. Please try again.");
+              }}
+              // className="w-full"
             />
           </div>
         )}
 
-        {message && <p className="mt-4 text-red-500">{message}</p>}
+        {message && <p className="mt-4 text-[#e5bafc]">{message}</p>}
       </div>
     </div>
   );
