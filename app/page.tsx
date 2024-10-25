@@ -1,101 +1,90 @@
-import Image from "next/image";
+"use client";
+import { useState, useEffect } from "react";
+import { Scanner } from "@yudiel/react-qr-scanner";
+import localforage from "localforage";
 
-export default function Home() {
+const options = [
+  "Oct25 Lunch",
+  "Oct25 Dinner",
+  "Swag",
+  "Badge",
+  "Oct26 Breakfast",
+];
+
+export default function App() {
+  const [isBrowser, setIsBrowser] = useState(false); // Check if we're in the browser
+  const [data, setData] = useState<string | null>(null);
+  const [selectedOption, setSelectedOption] = useState<string>("");
+  const [message, setMessage] = useState<string>("");
+
+  useEffect(() => {
+    // This ensures that the code only runs in the browser and not during SSR
+    setIsBrowser(typeof window !== "undefined");
+  }, []);
+
+  const handleScan = async (detectedCodes: { rawValue: string }[]) => {
+    if (detectedCodes && detectedCodes[0]) {
+      const result = detectedCodes[0].rawValue;
+      const alreadyScanned = await localforage.getItem<string>(result);
+      if (alreadyScanned) {
+        setMessage(`User already received ${alreadyScanned}`);
+      } else {
+        setData(result);
+        setMessage("");
+      }
+    }
+  };
+
+  const handleSelection = async () => {
+    if (data && selectedOption) {
+      await localforage.setItem(data, selectedOption);
+      setMessage(`Selected: ${selectedOption} for QR code ${data}`);
+      setData(null);
+      setSelectedOption("");
+    } else {
+      setMessage("Please scan a QR code and select an option");
+    }
+  };
+
+  // Only render the Scanner if we are in the browser
+  if (!isBrowser) {
+    return null;
+  }
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
+      <h1 className="text-4xl font-bold mb-8">QR Code Scanner</h1>
+      <div className="w-full max-w-md p-4 bg-white rounded shadow-lg">
+        <Scanner
+          onScan={handleScan}
+          onError={(error) => console.error(error)}
+          style={{ width: "100%" }}
         />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+        {data && (
+          <div className="mt-4">
+            <h2 className="text-xl">Scanned QR Code: {data}</h2>
+            <select
+              className="mt-2 p-2 border border-gray-300 rounded"
+              value={selectedOption}
+              onChange={(e) => setSelectedOption(e.target.value)}
+            >
+              <option value="">Select an option</option>
+              {options.map((opt) => (
+                <option key={opt} value={opt}>
+                  {opt}
+                </option>
+              ))}
+            </select>
+            <button
+              className="mt-4 p-2 bg-blue-500 text-white rounded hover:bg-blue-700"
+              onClick={handleSelection}
+            >
+              Confirm Selection
+            </button>
+          </div>
+        )}
+        {message && <p className="mt-4 text-red-500">{message}</p>}
+      </div>
     </div>
   );
 }
