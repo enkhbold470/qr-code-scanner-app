@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Scanner } from "@yudiel/react-qr-scanner";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import { db } from "../firebase"; // Import Firestore database
@@ -14,15 +14,9 @@ const options = [
 ];
 
 export default function App() {
-  const [isBrowser, setIsBrowser] = useState(false); // Check if we're in the browser
   const [selectedOption, setSelectedOption] = useState<string>(""); // Selected option
-  const [data, setData] = useState<string | null>(null);
   const [message, setMessage] = useState<string>("");
   const [isOptionSelected, setIsOptionSelected] = useState<boolean>(false); // Tracks if the option is selected
-
-  useEffect(() => {
-    setIsBrowser(typeof window !== "undefined");
-  }, []);
 
   const handleScan = async (detectedCodes: { rawValue: string }[]) => {
     if (detectedCodes && detectedCodes[0]) {
@@ -49,7 +43,6 @@ export default function App() {
             timestamp: new Date(),
           });
           setMessage(`Selected: ${selectedOption} for QR code ${qrCode}`);
-          setData(qrCode); // Store the scanned data if needed
         }
       } else {
         setMessage("QR code is invalid.");
@@ -94,7 +87,7 @@ export default function App() {
             <Scanner
               onScan={handleScan}
               onError={(error) => console.error(error)}
-              style={{ width: "100%" }}
+              // style={{ width: "100%" }}
             />
           </div>
         )}
